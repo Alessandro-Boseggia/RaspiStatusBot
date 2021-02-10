@@ -1,19 +1,17 @@
 const { exec } = require('child_process');
 
-async function piHoleStatus() {
+async function getStatus(serviceName) {
     return new Promise(function (resolve, reject) {
-        exec("bash ./ScriptBash/PiHoleStatusScript.sh",  async function (error, stdout, stderr) {
+        exec(`systemctl status ${serviceName}`,  async function (error, stdout, stderr) {
             if (error) {
                 console.log(`error: ${error.message}`);
-                reject();
+                reject(error.message);
             }
             if (stderr) {
                 console.log(`stderr: ${stderr}`);            
             }
-            let res = stdout.split('\\')[0];
-            resolve(res);               
+            
+            resolve((stdout.includes("active")) ? `\\[\\+\\] ${serviceName}` : `\\[\\-\\] ${serviceName}`);
         })
-    })       
+    })
 }
-
-module.exports = {piHoleStatus}
