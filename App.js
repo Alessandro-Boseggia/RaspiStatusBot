@@ -1,10 +1,18 @@
-const { Telegraf } = require('telegraf');
+const { Telegraf, Markup } = require('telegraf');
 require('dotenv').config();
 const cron = require('node-cron');
-const status = require('./statusOfService.js');
+const status = require('./StatusOfServices/statusOfService.js')
+const serviceDB = require('./LocalDatabase/serviceDB.js');
+
+console.log(serviceDB.initDataBase());
 
 const bot = new Telegraf(process.env.TOKEN);
 const userID = process.env.USERID;
+const mainMenu = {'message': "<b>Menu principale</b> \n Seleziona un opzione",'keyboard': Markup.inlineKeyboard([
+    [ Markup.button.callback('Aggiungi servizio', 'addService'), Markup.button.callback('Lista servizi', 'showService') ], 
+    [ Markup.button.callback('Imposta servizi temporizzati', 'temporizedService') ], 
+])
+}
 
 bot.use(async (ctx, next) => {
     if (userID != ctx.from.id) 
@@ -15,15 +23,9 @@ bot.use(async (ctx, next) => {
 bot.start(async (ctx) => {
     if (userID != ctx.from.id) 
         return;
-    ctx.reply('Starting BOT');
+    ctx.replyWithHTML(mainMenu.message, mainMenu.keyboard);
 })
 
-bot.command('piholestatus', async (ctx) => ctx.reply(await status.piHoleStatus()))
-
-cron.schedule('0 6 * * *', async () => {
-    bot.telegram.sendMessage(userID, await status.piHoleStatus());
-});
-  
 process.once('SIGINT', () => bot.stop('SIGINT'))
 process.once('SIGTERM', () => bot.stop('SIGTERM'))
 bot.launch();
